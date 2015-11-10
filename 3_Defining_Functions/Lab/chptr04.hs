@@ -92,3 +92,48 @@ myOdds_1 n = map f [0..n-1]
 myOdds_2 :: Int -> [Int]
 myOdds_2 n = map (\x -> x * 2 + 1) [0..n-1]
 
+halve :: [a] -> ([a], [a])
+halve xs = (take l xs, drop l xs)
+           where l = length xs `div` 2
+
+safetail_1 :: [a] -> [a]
+safetail_1 xs = if null xs then xs else tail xs
+
+safetail_2 :: [a] -> [a]
+safetail_2 xs | null xs   = xs
+            | otherwise = tail xs
+
+safetail_3 :: [a] -> [a]
+safetail_3 [] = []
+safetail_3 (_:xs) = xs
+
+(<|||>) :: Bool -> Bool -> Bool
+True  <|||> True  = True
+True  <|||> False = True
+False <|||> True  = True
+False <|||> False = False
+
+(||||) :: Bool -> Bool -> Bool
+False |||| False = False
+_     |||| _     = True
+
+(|||||) :: Bool -> Bool -> Bool
+False ||||| a = a
+_     ||||| _ = True
+
+(||||||) :: Bool -> Bool -> Bool
+a |||||| b | a == b    = a
+           | otherwise = True
+
+(<&&&>) :: Bool -> Bool -> Bool
+a <&&&> b = if a == False then False else
+              if b == False then False else True
+
+(<&&&&>) :: Bool -> Bool -> Bool
+True <&&&&> b = if b == True then True else False
+
+mult x y z = x * y * z
+
+myMult :: Num a => a -> (a -> (a -> a))
+myMult x = \y -> (\z -> x * y * z)
+
