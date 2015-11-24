@@ -106,3 +106,76 @@ channel = id
 mapFilter :: (a -> b) -> (a -> Bool) -> [a] -> [b]
 mapFilter f p = map f . filter p
 
+myAll :: (a -> Bool) -> [a] -> Bool
+myAll p = foldr (\x -> (&&) (p x)) True
+
+myAny :: (a -> Bool) -> [a] -> Bool
+myAny p = foldl (\res x -> res || (p x)) False
+
+myTakeWhile :: (a -> Bool) -> [a] -> [a]
+myTakeWhile p = foldr (\x xs -> if p x then [x] ++ xs else [] ++ []) []
+-- myTakeWhile _ [] = []
+-- myTakeWhile p (x:xs) = if p x then [x] ++ myTakeWhile p xs else [] ++ []
+
+myDropWhile :: (a -> Bool) -> [a] -> [a]
+-- myDropWhile p = foldr (\x xs -> if p x then xs else x : xs) []
+myDropWhile _ [] = []
+myDropWhile p (x:xs) = if p x then myDropWhile p xs else x : xs
+
+myMap3 :: (a -> b) -> [a] -> [b]
+myMap3 f = foldr (\x -> (:) (f x)) []
+
+myFilter3 :: (a -> Bool) -> [a] -> [a]
+myFilter3 p = foldr (\x -> if p x then (:) x else id) []
+
+dec2int :: [Int] -> Int
+dec2int xs = (fst . foldl (\res x -> (fst res + x * snd res, snd res `div` 10)) (0, 10^(length xs - 1))) xs
+
+myCurry :: ((a,b) -> c) -> (a -> b -> c)
+myCurry f = \x y -> f (x,y)
+
+myUncurry :: (a -> b -> c) -> ((a,b) -> c)
+myUncurry f = \pair -> f (fst pair) (snd pair)
+
+unfold :: (a -> Bool) -> (a -> b) -> (a -> a) -> a -> [b]
+unfold p h t x | p x = []
+               | otherwise = h x : unfold p h t (t x)
+
+int2bin2 :: Int -> [Bit]
+int2bin2 = unfold (== 0) (`mod` 2) (`div` 2)
+
+chop82 :: [Bit] -> [[Bit]]
+chop82 = unfold (null) (take 8) (drop 8)
+
+myMap4 :: (a -> b) -> [a] -> [b]
+myMap4 f = unfold (null) (f . head) (tail)
+
+myIterate :: (a -> a) -> a -> [a]
+myIterate f = unfold (\_ -> False) (id) (f)
+
+addParity :: [Bit] -> [Bit]
+addParity [] = []
+addParity xs = xs ++ [(sum xs `mod` 2)]
+
+checkParity :: [Bit] -> [Bit]
+checkParity xs | sum xs `mod` 2 == 0 = init xs
+               | otherwise           = error "Parity wrong"
+
+encode2 :: String -> [Bit]
+encode2 = concat . map (addParity . make8 . int2bin . ord)
+
+chop9 :: [Bit] -> [[Bit]]
+chop9 = unfold (null) (take 9) (drop 9)
+
+decode2 :: [Bit] -> String
+decode2 = map (chr . bin2int2) . map (checkParity) . chop9
+
+transmit2 :: String -> String
+transmit2 = decode2 . channel . encode2
+
+channel2 :: [Bit] -> [Bit]
+channel2 = tail
+
+transmit3 :: String -> String
+transmit3 = decode2 . channel2 . encode2
+
