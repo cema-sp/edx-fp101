@@ -131,6 +131,9 @@ myFilter3 p = foldr (\x -> if p x then (:) x else id) []
 dec2int :: [Int] -> Int
 dec2int xs = (fst . foldl (\res x -> (fst res + x * snd res, snd res `div` 10)) (0, 10^(length xs - 1))) xs
 
+dec2int2 :: [Int] -> Int
+dec2int2 = foldl (\x y -> 10 * x + y) 0
+
 myCurry :: ((a,b) -> c) -> (a -> b -> c)
 myCurry f = \x y -> f (x,y)
 
