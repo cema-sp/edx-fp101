@@ -100,18 +100,9 @@ Derived primitives
 > nat                           =  do xs <- many1 digit
 >                                     return (read xs)
 >
-> int                           :: Parser Int
-> int                           =  error "You must implement int"
-> 
 > space                         :: Parser ()
 > space                         =  do many (sat isSpace)
 >                                     return ()
->
-> comment                       :: Parser ()
-> comment                       = error "You must implement comment"
->
-> expr                          :: Parser Int
-> expr                          = error "You must implement expr"
 
 Ignoring spacing
 ----------------
@@ -128,8 +119,5 @@ Ignoring spacing
 > natural                       :: Parser Int
 > natural                       =  token nat
 > 
-> integer                       :: Parser Int
-> integer                       =  token int
->
 > symbol                        :: String -> Parser String
 > symbol xs                     =  token (string xs)
