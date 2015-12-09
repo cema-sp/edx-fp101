@@ -144,12 +144,70 @@ runCalc = do cls
              clear
 
 
+width :: Int
+width = 5
 
+height :: Int
+height = 5
 
+-- type Board = [Pos]
+--            = [(Int, Int)]
 
+-- glider :: Board
+glider :: [(Int, Int)]
+glider = [(4, 2), (2, 3), (4, 3), (3, 4), (4, 4)]
 
+showcells :: [(Int, Int)] -> IO ()
+showcells b = seqn [ writeAt p "O" | p <- b ]
 
+isAlive :: [(Int, Int)] -> (Int, Int) -> Bool
+isAlive b p = elem p b
 
+isEmpty :: [(Int, Int)] -> (Int, Int) -> Bool
+isEmpty b p = not (isAlive b p)
+
+neighbs :: (Int, Int) -> [(Int, Int)]
+neighbs (x, y) = map wrap [(x - 1, y - 1), (x, y - 1),
+                           (x + 1, y - 1), (x - 1, y),
+                           (x + 1, y), (x - 1, y + 1),
+                           (x, y + 1), (x + 1, y + 1)]
+
+wrap :: (Int, Int) -> (Int, Int)
+wrap (x, y) = (((x - 1) `mod` width) + 1,
+               ((y - 1) `mod` height) + 1)
+
+liveNeighbs :: [(Int, Int)] -> (Int, Int) -> Int
+liveNeighbs b = length . filter (isAlive b) . neighbs
+
+survivors :: [(Int, Int)] -> [(Int, Int)]
+survivors b = [ p | p <- b, elem (liveNeighbs b p) [2, 3] ]
+
+-- births :: [(Int, Int)] -> [(Int, Int)]
+-- births b = [ (x, y) | x <- [1..width],
+--                       y <- [1..height],
+--                       isEmpty b (x, y),
+--                       liveNeighbs b (x, y) == 3 ]
+
+births :: [(Int, Int)] -> [(Int, Int)]
+births b = [ p | p <- rmDups (concat (map neighbs b)),
+                 isEmpty b p,
+                 liveNeighbs b p == 3 ]
+
+rmDups :: Eq a => [a] -> [a]
+rmDups [] = []
+rmDups (x:xs) = x : rmDups(filter (/=x) xs)
+
+nextGen :: [(Int, Int)] -> [(Int, Int)]
+nextGen b = survivors b ++ births b
+
+life :: [(Int, Int)] -> IO ()
+life b = do cls
+            showcells b
+            wait 500
+            life (nextGen b)
+
+wait :: Int -> IO ()
+wait n = seqn [ return () | _ <- [1..n] ]
 
 
 
