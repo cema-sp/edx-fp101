@@ -1,10 +1,11 @@
 -- !!! run ghci: > ghci -i../../7_Functional_Parsers/Lab
 module Chptr09 where
 
-import Parsing
-import Chptr08
-import System.IO hiding(getLine, putStr, putStrLn)
-import Prelude hiding(getLine, putStr, putStrLn)
+import           Chptr08
+import           Parsing
+import           Prelude   hiding (getLine, putStr, putStrLn)
+import           System.IO hiding (getLine, putStr, putStrLn)
+import           System.Posix.Unistd(sleep)
 
 -- type IO = World -> World
 -- IO takes initial 'state of the world' and returns modified one with side effects
@@ -41,7 +42,7 @@ strlen = do putStr "Enter a string: "
             xs <- getLine
             putStr "Length: "
             putStr (show (length xs))
-            putStrLn " characters" 
+            putStrLn " characters"
 
 
 beep :: IO ()
@@ -120,7 +121,8 @@ process c xs
   | otherwise          = press c xs
 
 quit :: IO ()
-quit = goto (1, 14)
+quit = do goto (1, 1)
+          cls
 
 delete :: String -> IO ()
 delete "" = calc ""
@@ -129,8 +131,10 @@ delete xs = calc (init xs)
 evaluate :: String -> IO ()
 evaluate xs = case parse expr xs of
                    [(n, "")] -> calc (show n)
-                   _ -> do beep
-                           calc xs
+                   [(_, re)] -> do goto (3 + min 13 (length xs) - length re, 2)
+                                   beep
+                                   getCh
+                                   calc xs
 
 clear :: IO ()
 clear = calc ""
@@ -158,7 +162,13 @@ glider :: [(Int, Int)]
 glider = [(4, 2), (2, 3), (4, 3), (3, 4), (4, 4)]
 
 showcells :: [(Int, Int)] -> IO ()
-showcells b = seqn [ writeAt p "O" | p <- b ]
+showcells b = seqn [ writeAt p "o" | p <- b ]
+
+redrawCells :: [(Int, Int)] -> [(Int, Int)] -> IO ()
+redrawCells pb nb = seqn (erase ++ draw)
+                    where
+                      erase = [ writeAt p " " | p <- pb, not . elem p $ nb ]
+                      draw  = [ writeAt p "o" | p <- nb, not . elem p $ pb ]
 
 isAlive :: [(Int, Int)] -> (Int, Int) -> Bool
 isAlive b p = elem p b
@@ -201,13 +211,74 @@ nextGen :: [(Int, Int)] -> [(Int, Int)]
 nextGen b = survivors b ++ births b
 
 life :: [(Int, Int)] -> IO ()
-life b = do cls
-            showcells b
-            wait 500
-            life (nextGen b)
+life b = do let nb = nextGen b
+            redrawCells b nb
+            goto (width + 1, height + 1)
+            sleep 1
+            life nb
+
+-- life b = do cls
+--             showcells b
+--             wait 500
+--             life (nextGen b)
 
 wait :: Int -> IO ()
 wait n = seqn [ return () | _ <- [1..n] ]
+
+-- Exercises
+
+-- getLine :: IO String
+-- getLine = do x <- getChar
+--              if x == '\n' then
+--                 return []
+--               else
+--                 do xs <- getLine
+--                    return (x:xs)
+
+readLine :: String -> IO String
+readLine xs =
+  do c <- getCh
+     case c of
+          '\DEL' -> do putStr "\ESC[1D \ESC[1D"
+                       cs <- readLine (if length xs == 0 then xs else init xs)
+                       return cs
+          '\n'   -> do putChar c
+                       return xs
+          _      -> do putChar c
+                       cs <- readLine (xs ++ [c])
+                       return cs
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
