@@ -39,16 +39,13 @@ fibGT1000 = head . dropWhile (<1000) $ fibs
 data Tree a = Leaf | Node (Tree a) a (Tree a)
               deriving (Show, Eq)
 
-repeatT :: Tree a -> Tree a
-repeatT Leaf         = error "Can not repeat Leaf"
-repeatT (Node l v r) = Node (repeatT n) v (repeatT n)
-                       where n = Node l v r
+repeatT :: a -> Tree a
+repeatT n = Node (repeatT n) n (repeatT n)
 
 takeT :: Int -> Tree a -> Tree a
 takeT 0 _            = Leaf
 takeT n Leaf         = Leaf
-takeT n (Node l v r) = Node (takeT (n - 1) t) v (takeT (n - 1) t)
-                       where t = Node l v r
+takeT n (Node l v r) = Node (takeT (n - 1) l) v (takeT (n - 1) r)
 
-replicateT :: Int -> Tree a -> Tree a
+replicateT :: Int -> a -> Tree a
 replicateT n = takeT n . repeatT
